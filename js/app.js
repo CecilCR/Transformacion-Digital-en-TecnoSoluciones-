@@ -301,7 +301,7 @@ function mostrarPregunta() {
         container.appendChild(btn);
     });
     
-    document.getElementById('retroalimentacion-container').innerHTML = '';
+    document.getElementById('retroalimentación-container').innerHTML = '';
     document.getElementById('btn-siguiente').disabled = true;
     opcionSeleccionada = null;
 }
@@ -325,9 +325,9 @@ function seleccionarOpcion(index) {
         }
     });
     
-    const container = document.getElementById('retroalimentacion-container');
+    const container = document.getElementById('retroalimentación-container');
     const div = document.createElement('div');
-    div.className = `retroalimentacion ${opcion.correcta ? 'exito' : 'error'}`;
+    div.className = `retroalimentación ${opcion.correcta ? 'exito' : 'error'}`;
     div.textContent = opcion.retroalimentación;  // ← CON ACENTO
     container.appendChild(div);
     
