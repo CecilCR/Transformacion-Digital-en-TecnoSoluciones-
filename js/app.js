@@ -28,12 +28,12 @@ import {
 // ============================================
 
 const firebaseConfig = {
-    apiKey: "AIzaSy...", // ← REEMPLAZA CON TU API KEY
-    authDomain: "tu-proyecto.firebaseapp.com",
-    projectId: "tu-proyecto",
-    storageBucket: "tu-proyecto.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "1:123456789:web:abcdef"
+  apiKey: "AIzaSyAlaxoaQxDgLrnRJV0L6ReiTEy1gDhziFI",
+  authDomain: "transformacion-digital-cf6c0.firebaseapp.com",
+  projectId: "transformacion-digital-cf6c0",
+  storageBucket: "transformacion-digital-cf6c0.firebasestorage.app",
+  messagingSenderId: "160342297932",
+  appId: "1:160342297932:web:66421cc33bc3a42e4f13e9"
 };
 
 const app = initializeApp(firebaseConfig);
