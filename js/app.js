@@ -28,12 +28,12 @@ import {
 // ============================================
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAlaxoaQxDgLrnRJV0L6ReiTEy1gDhziFI",
-  authDomain: "transformacion-digital-cf6c0.firebaseapp.com",
-  projectId: "transformacion-digital-cf6c0",
-  storageBucket: "transformacion-digital-cf6c0.firebasestorage.app",
-  messagingSenderId: "160342297932",
-  appId: "1:160342297932:web:66421cc33bc3a42e4f13e9"
+    apiKey: "AIzaSy...", // ← REEMPLAZA CON TU API KEY
+    authDomain: "tu-proyecto.firebaseapp.com",
+    projectId: "tu-proyecto",
+    storageBucket: "tu-proyecto.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "1:123456789:web:abcdef"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -280,15 +280,19 @@ function mostrarPregunta() {
 
     const pregunta = preguntas[preguntaActual];
     
+    // Actualizar contador
     document.getElementById('pregunta-contador').textContent = 
         `Pregunta ${preguntaActual + 1} de ${preguntas.length}`;
     
+    // Actualizar barra de progreso
     const progreso = ((preguntaActual) / preguntas.length) * 100;
     document.getElementById('progreso-fill').style.width = `${progreso}%`;
     
+    // Mostrar contexto y título
     document.getElementById('pregunta-contexto').textContent = pregunta.contexto;
     document.getElementById('pregunta-titulo').textContent = pregunta.titulo;
     
+    // Generar opciones
     const container = document.getElementById('opciones-container');
     container.innerHTML = '';
     
@@ -301,8 +305,13 @@ function mostrarPregunta() {
         container.appendChild(btn);
     });
     
-    document.getElementById('retroalimentación-container').innerHTML = '';
+    // Limpiar retroalimentación
+    document.getElementById('retroalimentacion-container').innerHTML = '';
+    
+    // Deshabilitar botón siguiente
     document.getElementById('btn-siguiente').disabled = true;
+    
+    // Restablecer selección
     opcionSeleccionada = null;
 }
 
@@ -325,18 +334,21 @@ function seleccionarOpcion(index) {
         }
     });
     
-    const container = document.getElementById('retroalimentación-container');
+    // Mostrar retroalimentación
+    const container = document.getElementById('retroalimentacion-container');
     const div = document.createElement('div');
-    div.className = `retroalimentación ${opcion.correcta ? 'exito' : 'error'}`;
-    div.textContent = opcion.retroalimentación;  // ← CON ACENTO
+    div.className = `retroalimentacion ${opcion.correcta ? 'exito' : 'error'}`;
+    div.textContent = opcion.retroalimentación;
     container.appendChild(div);
     
+    // Actualizar puntaje
     if (opcion.correcta) {
         puntajeTotal += opcion.puntaje;
         document.getElementById('puntaje-total').textContent = puntajeTotal;
         document.getElementById('puntaje-actual').textContent = `${puntajeTotal} pts`;
     }
     
+    // Guardar respuesta
     respuestasUsuario.push({
         preguntaId: pregunta.id,
         opcionSeleccionada: index,
@@ -344,8 +356,10 @@ function seleccionarOpcion(index) {
         puntaje: opcion.correcta ? opcion.puntaje : 0
     });
     
+    // Habilitar botón siguiente
     document.getElementById('btn-siguiente').disabled = false;
     
+    // Marcar correcta/incorrecta visualmente
     botones.forEach((btn, i) => {
         if (pregunta.opciones[i].correcta) {
             btn.classList.add('correcta');
