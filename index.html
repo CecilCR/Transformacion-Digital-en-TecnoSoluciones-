@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestión del Cambio - Simulador</title>
+
+    <style>
+        /* ==========================================
+           ESTILOS GENERALES
+           ========================================== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            max-width: 700px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #1a237e;
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .subtitulo {
+            text-align: center;
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ==========================================
+           FORMULARIOS DE AUTENTICACIÓN
+           ========================================== */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+
+        .form-group input:focus {
+            border-color: #1a237e;
+            outline: none;
+        }
+
+        .mensaje {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 500;
+        }
+
+        .mensaje-exito {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-left: 4px solid #2e7d32;
+        }
+
+        .mensaje-error {
+            background: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #c62828;
+        }
+
+        .text-center {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .toggle-link {
+            color: #1a237e;
+            cursor: pointer;
+            text-decoration: underline;
+            font-weight: 600;
+        }
+
+        .toggle-link:hover {
+            color: #0d1442;
+        }
+
+        /* ==========================================
+           BOTONES
+           ========================================== */
+        .btn {
+            background: #1a237e;
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background 0.3s;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background: #0d1442;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-success {
+            background: #2e7d32;
+        }
+
+        .btn-success:hover {
+            background: #1b5e20;
+        }
+
+        .btn-danger {
+            background: #c62828;
+        }
+
+        .btn-danger:hover {
+            background: #8e0000;
+        }
+
+        .btn-secondary {
+            background: #1565C0;
+        }
+
+        .btn-secondary:hover {
+            background: #0d47a1;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .btn-group .btn {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        /* ==========================================
+           PREGUNTAS
+           ========================================== */
+        .pregunta-contexto {
+            background: #e8eaf6;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #1a237e;
+            font-style: italic;
+            color: #333;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .pregunta-titulo {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a237e;
+            margin: 20px 0 10px 0;
+        }
+
+        .opcion {
+            display: block;
+            background: #f5f5f5;
+            padding: 15px 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+            text-align: left;
+            width: 100%;
+            font-family: inherit;
+        }
+
+        .opcion:hover:not(:disabled) {
+            background: #e3f2fd;
+            border-color: #1a237e;
+            transform: translateX(5px);
+        }
+
+        .opcion.seleccionada {
+            background: #bbdefb;
+            border-color: #1a237e;
+        }
+
+        .opcion.correcta {
+            background: #c8e6c9;
+            border-color: #2e7d32;
+        }
+
+        .opcion.incorrecta {
+            background: #ffcdd2;
+            border-color: #c62828;
+        }
+
+        .opcion:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .retroalimentacion {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+
+        .retroalimentacion.exito {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-left: 4px solid #2e7d32;
+        }
+
+        .retroalimentacion.error {
+            background: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #c62828;
+        }
+
+        /* ==========================================
+           PROGRESO
+           ========================================== */
+        .info-usuario {
+            background: #e3f2fd;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #1565C0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .info-usuario strong {
+            color: #1565C0;
+        }
+
+        .progreso {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 15px 0;
+            padding: 10px 0;
+            border-top: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .progreso-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            flex: 1;
+            margin: 0 15px;
+            overflow: hidden;
+            min-width: 60px;
+        }
+
+        .progreso-bar-fill {
+            height: 100%;
+            background: #1a237e;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        .puntaje {
+            font-weight: 700;
+            color: #1a237e;
+            font-size: 18px;
+            white-space: nowrap;
+        }
+
+        .puntaje-small {
+            font-weight: 700;
+            color: #1a237e;
+            font-size: 16px;
+        }
+
+        /* ==========================================
+           RESULTADOS
+           ========================================== */
+        .resultado-final {
+            text-align: center;
+            padding: 20px 10px;
+        }
+
+        .resultado-final .puntaje-final {
+            font-size: 52px;
+            font-weight: 700;
+            color: #1a237e;
+        }
+
+        .resultado-final .mensaje-final {
+            font-size: 20px;
+            margin: 15px 0;
+            color: #333;
+            line-height: 1.6;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .resultado-final .detalle {
+            text-align: left;
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .resultado-final .detalle-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+
+        .resultado-final .detalle-item:last-child {
+            border-bottom: none;
+        }
+
+        /* ==========================================
+           RESPONSIVE
+           ========================================== */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+            .opcion {
+                font-size: 14px;
+                padding: 12px 15px;
+            }
+            .pregunta-contexto {
+                font-size: 14px;
+                padding: 12px 15px;
+            }
+            .pregunta-titulo {
+                font-size: 18px;
+            }
+            .info-usuario {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+            .progreso {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .progreso-bar {
+                min-width: 40px;
+                margin: 0 5px;
+            }
+            .btn-group .btn {
+                font-size: 14px;
+                padding: 10px 15px;
+            }
+            .resultado-final .puntaje-final {
+                font-size: 40px;
+            }
+            .resultado-final .mensaje-final {
+                font-size: 17px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .container {
+                padding: 15px;
+            }
+            .opcion {
+                font-size: 13px;
+                padding: 10px 12px;
+            }
+            .btn {
+                font-size: 14px;
+                padding: 12px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <!-- ========================================================== -->
+        <!-- SECCIÓN DE AUTENTICACIÓN (REGISTRO / LOGIN)                 -->
+        <!-- ========================================================== -->
+        <div id="seccion-auth">
+            <h1>🏢 Gestión del Cambio</h1>
+            <p class="subtitulo">Simulador de decisiones estratégicas</p>
+
+            <div id="seccion-registro">
+                <h2 style="color: #1a237e; margin-bottom: 15px;">📝 Crear cuenta</h2>
+                <div class="form-group">
+                    <label>Nombre completo</label>
+                    <input type="text" id="registro-nombre" placeholder="Tu nombre" />
+                </div>
+                <div class="form-group">
+                    <label>Correo electrónico</label>
+                    <input type="email" id="registro-email" placeholder="tu@email.com" />
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="registro-password" placeholder="Mínimo 6 caracteres" />
+                </div>
+                <button class="btn" onclick="handleRegistro()">📝 Crear cuenta</button>
+                <div class="text-center">
+                    <span>¿Ya tienes cuenta? </span>
+                    <span class="toggle-link" onclick="mostrarLogin()">Inicia sesión</span>
+                </div>
+                <div id="registro-mensaje"></div>
+            </div>
+
+            <div id="seccion-login" class="hidden">
+                <h2 style="color: #1a237e; margin-bottom: 15px;">🔑 Iniciar sesión</h2>
+                <div class="form-group">
+                    <label>Correo electrónico</label>
+                    <input type="email" id="login-email" placeholder="tu@email.com" />
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="login-password" placeholder="Tu contraseña" />
+                </div>
+                <button class="btn" onclick="handleLogin()">🔑 Iniciar sesión</button>
+                <div class="text-center">
+                    <span>¿No tienes cuenta? </span>
+                    <span class="toggle-link" onclick="mostrarRegistro()">Regístrate</span>
+                </div>
+                <div id="login-mensaje"></div>
+            </div>
+        </div>
+
+        <!-- ========================================================== -->
+        <!-- SECCIÓN DEL SIMULADOR (PROTEGIDA)                           -->
+        <!-- ========================================================== -->
+        <div id="seccion-simulador" class="hidden">
+            <h1>🏢 Gestión del Cambio</h1>
+            <p class="subtitulo">Simulador de decisiones estratégicas</p>
+
+            <!-- INFO USUARIO -->
+            <div class="info-usuario">
+                <span><strong>👤 Usuario:</strong> <span id="usuario-nombre">Cargando...</span></span>
+                <span class="puntaje-small"><strong>🏆 Puntaje:</strong> <span id="puntaje-total">0</span> pts</span>
+            </div>
+
+            <button class="btn btn-danger" onclick="handleCerrarSesion()" style="margin-bottom: 15px;">🚪 Cerrar sesión</button>
+
+            <!-- PROGRESO -->
+            <div class="progreso">
+                <span id="pregunta-contador" style="font-weight: 600;">Pregunta 1 de 5</span>
+                <div class="progreso-bar">
+                    <div class="progreso-bar-fill" id="progreso-fill"></div>
+                </div>
+                <span class="puntaje" id="puntaje-actual">0 pts</span>
+            </div>
+
+            <!-- PREGUNTA -->
+            <div id="contenedor-pregunta">
+                <div class="pregunta-contexto" id="pregunta-contexto">
+                    Cargando contexto...
+                </div>
+                <div class="pregunta-titulo" id="pregunta-titulo">
+                    Cargando pregunta...
+                </div>
+                <div id="opciones-container">
+                    <!-- Las opciones se generan dinámicamente -->
+                </div>
+                <div id="retroalimentacion-container"></div>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" id="btn-siguiente" onclick="siguientePregunta()" disabled>
+                        ➡️ Siguiente
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================== -->
+        <!-- SECCIÓN DE RESULTADOS                                       -->
+        <!-- ========================================================== -->
+        <div id="seccion-resultados" class="hidden">
+            <h1>🏢 Gestión del Cambio</h1>
+            <p class="subtitulo">Resultados del simulador</p>
+
+            <div class="resultado-final">
+                <div class="puntaje-final" id="puntaje-final">0</div>
+                <div style="font-size: 18px; color: #666; margin-bottom: 5px;">puntos de 100 posibles</div>
+                <div class="mensaje-final" id="mensaje-final">Cargando...</div>
+                <div style="margin: 15px 0; font-weight: 600; color: #1a237e;">📊 Resumen de respuestas</div>
+                <div class="detalle" id="detalle-resultados"></div>
+                <button class="btn" onclick="reiniciarSimulador()">🔄 Reiniciar simulador</button>
+                <button class="btn btn-secondary" onclick="cerrarSesionYReiniciar()" style="margin-top: 10px;">🚪 Cerrar sesión</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- IMPORT MAP PARA FIREBASE                                    -->
+    <!-- ========================================================== -->
+    <script type="importmap">
+        {
+            "imports": {
+                "firebase/app": "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js",
+                "firebase/firestore": "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js",
+                "firebase/auth": "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js"
+            }
+        }
+    </script>
+
+    <!-- ========================================================== -->
+    <!-- CARGAR app.js                                                -->
+    <!-- ========================================================== -->
+    <script type="module" src="js/app.js"></script>
+
+</body>
+</html>
