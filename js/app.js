@@ -28,7 +28,7 @@ import {
 // ============================================
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAlaxoaQxDgLrnRJV0L6ReiTEy1gDhziFI",
+  apiKey: "AIzaSyATr2nmqIq6QAm0eC3aO-PbhLaaqlTaNlE",
   authDomain: "transformacion-digital-cf6c0.firebaseapp.com",
   projectId: "transformacion-digital-cf6c0",
   storageBucket: "transformacion-digital-cf6c0.firebasestorage.app",
