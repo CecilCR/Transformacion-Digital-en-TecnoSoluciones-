@@ -28,7 +28,7 @@ import {
 // ============================================
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBpzZvP3jajz1IMZsteu8qO5W0vrWq673E",
+  apiKey: "AIzaSyATr2nmqIq6QAm0eC3aO-PbhLaaqlTaNlE",
   authDomain: "birdmatch-lima.firebaseapp.com",
   projectId: "birdmatch-lima",
   storageBucket: "birdmatch-lima.firebasestorage.app",
