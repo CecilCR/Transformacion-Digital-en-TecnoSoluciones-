@@ -251,6 +251,16 @@ window.cerrarSesionYReiniciar = async function() {
 // ============================================
 
 async function cargarPreguntas() {
+    const user = auth.currentUser;
+    
+    // Si no hay usuario autenticado, mostrar mensaje y detener
+    if (!user) {
+        console.warn("⚠️ No hay usuario autenticado. Inicia sesión para ver las preguntas.");
+        document.getElementById('pregunta-titulo').textContent = '🔒 Inicia sesión para comenzar';
+        document.getElementById('pregunta-contexto').textContent = 'Debes iniciar sesión para acceder al simulador.';
+        return;
+    }
+
     try {
         const q = query(collection(db, "preguntas"), orderBy("orden"));
         const snapshot = await getDocs(q);
@@ -270,10 +280,17 @@ async function cargarPreguntas() {
         iniciarSimulador();
     } catch (error) {
         console.error("❌ Error al cargar preguntas:", error);
-        alert("Error al cargar preguntas: " + error.message);
+        
+        if (error.code === 'permission-denied') {
+            document.getElementById('pregunta-titulo').textContent = '🔒 Permiso denegado';
+            document.getElementById('pregunta-contexto').textContent = 
+                'No tienes permisos para leer las preguntas. Verifica que hayas iniciado sesión correctamente.';
+        } else {
+            document.getElementById('pregunta-titulo').textContent = '❌ Error al cargar preguntas';
+            document.getElementById('pregunta-contexto').textContent = error.message;
+        }
     }
 }
-
 // ============================================
 // INICIAR SIMULADOR
 // ============================================
@@ -498,10 +515,23 @@ async function guardarRespuestas() {
 // INICIALIZAR
 // ============================================
 
-// Cargar preguntas al iniciar
 document.addEventListener('DOMContentLoaded', () => {
     console.log("🚀 Aplicación iniciada");
-    cargarPreguntas();
+    
+    // Escuchar cambios en el estado de autenticación
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            console.log("✅ Usuario autenticado:", user.email);
+            // Cargar preguntas SOLO cuando el usuario está logueado
+            cargarPreguntas();
+        } else {
+            console.log("👤 Usuario no autenticado. Esperando login...");
+            // Mostrar mensaje de espera
+            document.getElementById('pregunta-titulo').textContent = '🔒 Inicia sesión para comenzar';
+            document.getElementById('pregunta-contexto').textContent = 
+                'Regístrate o inicia sesión para acceder al simulador de preguntas.';
+        }
+    });
 });
 
 // ============================================
