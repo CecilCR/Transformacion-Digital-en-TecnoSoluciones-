@@ -442,14 +442,58 @@ function mostrarResultadosFinales() {
 }
 
 // ============================================
-// GUARDAR RESPUESTAS
+// GUARDAR RESPUESTAS EN FIRESTORE
 // ============================================
 
 async function guardarRespuestas() {
-    // Esta función debe implementarse para guardar en Firestore
-    console.log("📝 Respuestas guardadas:", respuestasUsuario);
-}
+    const user = auth.currentUser;
+    
+    // Verificar si hay un usuario autenticado
+    if (!user) {
+        console.warn("⚠️ No hay usuario autenticado. Las respuestas NO se guardaron.");
+        return;
+    }
 
+    // Verificar que haya respuestas para guardar
+    if (!respuestasUsuario || respuestasUsuario.length === 0) {
+        console.warn("⚠️ No hay respuestas para guardar.");
+        return;
+    }
+
+    try {
+        console.log(`📝 Guardando ${respuestasUsuario.length} respuestas...`);
+
+        // Guardar cada respuesta como un documento individual en Firestore
+        for (const respuesta of respuestasUsuario) {
+            await addDoc(collection(db, "respuestas"), {
+                userId: user.uid,                    // Identificador del usuario
+                userEmail: user.email,               // Email del usuario (opcional)
+                preguntaId: respuesta.preguntaId,    // ID de la pregunta
+                opcionSeleccionada: respuesta.opcionSeleccionada,
+                correcta: respuesta.correcta,
+                puntaje: respuesta.puntaje || 0,
+                fecha: new Date().toISOString()      // Fecha y hora
+            });
+        }
+
+        console.log("✅ Respuestas guardadas correctamente en Firestore");
+        
+        // Mostrar mensaje de éxito en la interfaz (opcional)
+        const mensajeFinal = document.getElementById('mensaje-final');
+        if (mensajeFinal) {
+            mensajeFinal.textContent += " 📁 Respuestas guardadas en la nube.";
+        }
+
+    } catch (error) {
+        console.error("❌ Error al guardar respuestas:", error);
+        
+        // Mostrar mensaje de error (opcional)
+        const mensajeFinal = document.getElementById('mensaje-final');
+        if (mensajeFinal) {
+            mensajeFinal.textContent += " ⚠️ No se pudieron guardar las respuestas.";
+        }
+    }
+}
 // ============================================
 // INICIALIZAR
 // ============================================
