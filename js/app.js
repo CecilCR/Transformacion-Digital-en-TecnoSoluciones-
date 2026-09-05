@@ -149,11 +149,6 @@ function mostrarResultados() {
     if (resultados) resultados.classList.remove('hidden');
 }
 
-function mostrarUsuarioAutenticado(userData) {
-    const nombreEl = document.getElementById('usuario-nombre');
-    if (nombreEl) nombreEl.textContent = userData.nombre || 'Sin nombre';
-}
-
 // ============================================
 // MANEJAR REGISTRO
 // ============================================
@@ -223,7 +218,6 @@ window.handleLogin = async function() {
 
     if (resultado.success) {
         mostrarMensaje('login-mensaje', '✅ Inicio de sesión exitoso', 'exito');
-        // Cargar preguntas automáticamente después del login
         setTimeout(() => {
             cargarPreguntas();
         }, 500);
@@ -291,23 +285,38 @@ async function cargarPreguntas() {
 
         console.log("📊 Documentos encontrados:", snapshot.size);
 
-        preguntas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        preguntas = snapshot.docs.map(doc => {
+            const data = doc.data();
+            // Verificar que opciones sea un array
+            if (!Array.isArray(data.opciones)) {
+                console.warn(`⚠️ Las opciones de ${doc.id} no son un array. Convirtiendo...`);
+                // Si es un objeto, convertirlo a array
+                if (typeof data.opciones === 'object' && data.opciones !== null) {
+                    data.opciones = Object.values(data.opciones);
+                } else {
+                    data.opciones = [];
+                }
+            }
+            return { id: doc.id, ...data };
+        });
 
         if (preguntas.length === 0) {
             console.warn("⚠️ No hay preguntas en Firestore");
             const titulo = document.getElementById('pregunta-titulo');
             const contexto = document.getElementById('pregunta-contexto');
-            if (titulo) titulo.textContent = 'Aún no hay preguntas configuradas para este simulador.';
-            if (contexto) contexto.textContent = 'Contacta a tu docente si esto no es lo esperado.';
+            if (titulo) titulo.textContent = '📚 No hay preguntas disponibles';
+            if (contexto) contexto.textContent = 'Contacta a tu administrador para cargar preguntas en el sistema.';
             return;
         }
 
         console.log(`✅ ${preguntas.length} preguntas cargadas desde Firestore`);
+        
         // Ocultar auth y mostrar simulador
         const authSection = document.getElementById('seccion-auth');
         const simulador = document.getElementById('seccion-simulador');
         if (authSection) authSection.classList.add('hidden');
         if (simulador) simulador.classList.remove('hidden');
+        
         iniciarSimulador();
         
     } catch (error) {
@@ -371,21 +380,35 @@ function mostrarPregunta() {
     const progresoFill = document.getElementById('progreso-fill');
     if (progresoFill) progresoFill.style.width = `${progreso}%`;
 
-    // Mostrar contexto y título
+    // Mostrar contexto y título (soporta ambos: titulo y título)
     const contexto = document.getElementById('pregunta-contexto');
-    const titulo = document.getElementById('pregunta-titulo');
-    if (contexto) contexto.textContent = pregunta.contexto;
-    if (titulo) titulo.textContent = pregunta.titulo;
+    const tituloEl = document.getElementById('pregunta-titulo');
+    if (contexto) contexto.textContent = pregunta.contexto || '';
+    
+    // Soporte para campo con tilde o sin tilde
+    const tituloTexto = pregunta.título || pregunta.titulo || 'Pregunta sin título';
+    if (tituloEl) tituloEl.textContent = tituloTexto;
 
     // Generar opciones
     const container = document.getElementById('opciones-container');
     if (!container) return;
     container.innerHTML = '';
 
-    pregunta.opciones.forEach((opcion, index) => {
+    // Verificar que opciones sea un array
+    let opciones = pregunta.opciones;
+    if (!Array.isArray(opciones)) {
+        console.warn("⚠️ opciones no es un array, convirtiendo...");
+        if (typeof opciones === 'object' && opciones !== null) {
+            opciones = Object.values(opciones);
+        } else {
+            opciones = [];
+        }
+    }
+
+    opciones.forEach((opcion, index) => {
         const btn = document.createElement('button');
         btn.className = 'opcion';
-        btn.textContent = `${String.fromCharCode(65 + index)}. ${opcion.texto}`;
+        btn.textContent = `${String.fromCharCode(65 + index)}. ${opcion.texto || 'Opción sin texto'}`;
         btn.dataset.index = index;
         btn.onclick = () => seleccionarOpcion(index);
         container.appendChild(btn);
@@ -411,7 +434,8 @@ function seleccionarOpcion(index) {
     if (opcionSeleccionada !== null) return;
 
     const pregunta = preguntas[preguntaActual];
-    const opcion = pregunta.opciones[index];
+    const opciones = Array.isArray(pregunta.opciones) ? pregunta.opciones : Object.values(pregunta.opciones || {});
+    const opcion = opciones[index];
     const botones = document.querySelectorAll('.opcion');
 
     opcionSeleccionada = index;
@@ -427,13 +451,13 @@ function seleccionarOpcion(index) {
     if (container) {
         const div = document.createElement('div');
         div.className = `retroalimentacion ${opcion.correcta ? 'exito' : 'error'}`;
-        div.textContent = opcion.retroalimentación;
+        div.textContent = opcion.retroalimentación || opcion.retroalimentacion || 'Sin retroalimentación';
         container.appendChild(div);
     }
 
     // Actualizar puntaje
     if (opcion.correcta) {
-        puntajeTotal += opcion.puntaje;
+        puntajeTotal += opcion.puntaje || 0;
         const puntajeTotalEl = document.getElementById('puntaje-total');
         const puntajeActualEl = document.getElementById('puntaje-actual');
         if (puntajeTotalEl) puntajeTotalEl.textContent = puntajeTotal;
@@ -444,8 +468,8 @@ function seleccionarOpcion(index) {
     respuestasUsuario.push({
         preguntaId: pregunta.id,
         opcionSeleccionada: index,
-        correcta: opcion.correcta,
-        puntaje: opcion.correcta ? opcion.puntaje : 0
+        correcta: opcion.correcta || false,
+        puntaje: opcion.correcta ? (opcion.puntaje || 0) : 0
     });
 
     // Habilitar botón siguiente
@@ -459,9 +483,10 @@ function seleccionarOpcion(index) {
 
     // Marcar correcta/incorrecta visualmente
     botones.forEach((btn, i) => {
-        if (pregunta.opciones[i].correcta) {
+        const opc = opciones[i];
+        if (opc && opc.correcta) {
             btn.classList.add('correcta');
-        } else if (i === index && !pregunta.opciones[i].correcta) {
+        } else if (i === index && opc && !opc.correcta) {
             btn.classList.add('incorrecta');
         }
     });
@@ -526,9 +551,10 @@ function mostrarResultadosFinales() {
         resumenContainer.innerHTML = '';
         respuestasUsuario.forEach((resp, index) => {
             const pregunta = preguntas[index];
+            const tituloTexto = pregunta.título || pregunta.titulo || 'Pregunta sin título';
             const div = document.createElement('div');
             div.className = `respuesta-resumen ${resp.correcta ? 'correcta' : 'incorrecta'}`;
-            div.textContent = `${index + 1}. ${pregunta.titulo} - ${resp.correcta ? '✅ Correcta' : '❌ Incorrecta'}`;
+            div.textContent = `${index + 1}. ${tituloTexto} - ${resp.correcta ? '✅ Correcta' : '❌ Incorrecta'}`;
             resumenContainer.appendChild(div);
         });
     }
@@ -594,10 +620,10 @@ document.addEventListener('DOMContentLoaded', () => {
     onAuthStateChanged(auth, (user) => {
         if (user) {
             console.log("✅ Usuario autenticado:", user.email);
+            
             // Mostrar nombre del usuario
             const nombreEl = document.getElementById('usuario-nombre');
             if (nombreEl) {
-                // Intentar obtener el nombre desde Firestore
                 const userDoc = doc(db, "usuarios", user.uid);
                 getDoc(userDoc).then((docSnap) => {
                     if (docSnap.exists()) {
@@ -610,11 +636,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     nombreEl.textContent = user.email;
                 });
             }
+            
             // Cargar preguntas automáticamente
             cargarPreguntas();
         } else {
             console.log("👤 Usuario no autenticado. Esperando login...");
-            // Asegurar que se muestra la sección de autenticación
             const authSection = document.getElementById('seccion-auth');
             const simulador = document.getElementById('seccion-simulador');
             if (authSection) authSection.classList.remove('hidden');
