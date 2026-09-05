@@ -25,19 +25,16 @@ import {
 
 // ============================================
 // CONFIGURACIÓN DE FIREBASE
-// ⚠️ REEMPLAZA LA API KEY CON TU NUEVA CLAVE SEGURA
 // ============================================
 
-{
-  apiKey: "AIzaSyBpzZvP3jajz1IMZsteu8qO5W0vrWq673E",
-  authDomain: "birdmatch-lima.firebaseapp.com",
-  projectId: "birdmatch-lima",
-  storageBucket: "birdmatch-lima.firebasestorage.app",
-  messagingSenderId: "166632281489",
-  appId: "1:166632281489:web:03ec3d3c4b92413aa17630"
+const firebaseConfig = {
+    apiKey: "AIzaSyBpzZvP3jajz1IMZsteu8qO5W0vrWq673E",
+    authDomain: "birdmatch-lima.firebaseapp.com",
+    projectId: "birdmatch-lima",
+    storageBucket: "birdmatch-lima.firebasestorage.app",
+    messagingSenderId: "166632281489",
+    appId: "1:166632281489:web:03ec3d3c4b92413aa17630"
 };
-
-
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -304,19 +301,15 @@ function mostrarPregunta() {
 
     const pregunta = preguntas[preguntaActual];
 
-    // Actualizar contador
     document.getElementById('pregunta-contador').textContent =
         `📌 Pregunta ${preguntaActual + 1} de ${preguntas.length}`;
 
-    // Actualizar barra de progreso
     const progreso = ((preguntaActual) / preguntas.length) * 100;
     document.getElementById('progreso-fill').style.width = `${progreso}%`;
 
-    // Mostrar contexto y título
     document.getElementById('pregunta-contexto').textContent = pregunta.contexto;
     document.getElementById('pregunta-titulo').textContent = pregunta.titulo;
 
-    // Generar opciones
     const container = document.getElementById('opciones-container');
     container.innerHTML = '';
 
@@ -329,13 +322,8 @@ function mostrarPregunta() {
         container.appendChild(btn);
     });
 
-    // Limpiar retroalimentación
     document.getElementById('retroalimentacion-container').innerHTML = '';
-
-    // Deshabilitar botón siguiente
     document.getElementById('btn-siguiente').disabled = true;
-
-    // Restablecer selección
     opcionSeleccionada = null;
 }
 
@@ -358,21 +346,18 @@ function seleccionarOpcion(index) {
         }
     });
 
-    // Mostrar retroalimentación
     const container = document.getElementById('retroalimentacion-container');
     const div = document.createElement('div');
     div.className = `retroalimentacion ${opcion.correcta ? 'exito' : 'error'}`;
     div.textContent = opcion.retroalimentación;
     container.appendChild(div);
 
-    // Actualizar puntaje
     if (opcion.correcta) {
         puntajeTotal += opcion.puntaje;
         document.getElementById('puntaje-total').textContent = puntajeTotal;
         document.getElementById('puntaje-actual').textContent = `${puntajeTotal} pts`;
     }
 
-    // Guardar respuesta
     respuestasUsuario.push({
         preguntaId: pregunta.id,
         opcionSeleccionada: index,
@@ -380,14 +365,12 @@ function seleccionarOpcion(index) {
         puntaje: opcion.correcta ? opcion.puntaje : 0
     });
 
-    // Habilitar botón siguiente
     const btnSiguiente = document.getElementById('btn-siguiente');
     btnSiguiente.disabled = false;
     btnSiguiente.textContent = (preguntaActual === preguntas.length - 1)
         ? '🏁 Finalizar'
         : '➡️ Siguiente pregunta';
 
-    // Marcar correcta/incorrecta visualmente
     botones.forEach((btn, i) => {
         if (pregunta.opciones[i].correcta) {
             btn.classList.add('correcta');
@@ -396,7 +379,6 @@ function seleccionarOpcion(index) {
         }
     });
 
-    // Scroll suave a la retroalimentación
     setTimeout(() => {
         container.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 200);
@@ -410,7 +392,6 @@ window.siguientePregunta = function() {
     preguntaActual++;
     if (preguntaActual < preguntas.length) {
         mostrarPregunta();
-        // Scroll al inicio de la pregunta
         document.getElementById('contenedor-pregunta').scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else {
         mostrarResultadosFinales();
@@ -436,4 +417,55 @@ function mostrarResultadosFinales() {
     let emoji = '';
     if (porcentaje >= 80) {
         emoji = '🌟';
-        mensaje = '¡Excelente!
+        mensaje = '¡Excelente! Sigue así.';
+    } else if (porcentaje >= 60) {
+        emoji = '👍';
+        mensaje = 'Buen trabajo, puedes mejorar.';
+    } else {
+        emoji = '📚';
+        mensaje = 'Sigue practicando, lo lograrás.';
+    }
+
+    document.getElementById('mensaje-final').textContent = `${emoji} ${mensaje}`;
+
+    const resumenContainer = document.getElementById('resumen-respuestas');
+    if (resumenContainer) {
+        resumenContainer.innerHTML = '';
+        respuestasUsuario.forEach((resp, index) => {
+            const pregunta = preguntas[index];
+            const div = document.createElement('div');
+            div.className = `respuesta-resumen ${resp.correcta ? 'correcta' : 'incorrecta'}`;
+            div.textContent = `${index + 1}. ${pregunta.titulo} - ${resp.correcta ? '✅ Correcta' : '❌ Incorrecta'}`;
+            resumenContainer.appendChild(div);
+        });
+    }
+}
+
+// ============================================
+// GUARDAR RESPUESTAS
+// ============================================
+
+async function guardarRespuestas() {
+    // Esta función debe implementarse para guardar en Firestore
+    console.log("📝 Respuestas guardadas:", respuestasUsuario);
+}
+
+// ============================================
+// INICIALIZAR
+// ============================================
+
+// Cargar preguntas al iniciar
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("🚀 Aplicación iniciada");
+    cargarPreguntas();
+});
+
+// ============================================
+// EXPORTAR FUNCIONES PARA USO GLOBAL
+// ============================================
+
+window.cargarPreguntas = cargarPreguntas;
+window.iniciarSimulador = iniciarSimulador;
+window.mostrarPregunta = mostrarPregunta;
+window.seleccionarOpcion = seleccionarOpcion;
+window.mostrarResultadosFinales = mostrarResultadosFinales;
