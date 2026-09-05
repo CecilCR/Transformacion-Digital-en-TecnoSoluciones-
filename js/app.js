@@ -252,10 +252,16 @@ window.cerrarSesionYReiniciar = async function() {
 
 async function cargarPreguntas() {
     try {
-        const q = query(collection(db, "preguntas"), orderBy("orden"));
-        const snapshot = await getDocs(q);
-        
+        const snapshot = await getDocs(collection(db, "preguntas"));
+
         preguntas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        preguntas.forEach(p => {
+            if (typeof p.orden !== 'number') {
+                console.warn(`⚠️ La pregunta "${p.titulo}" (id: ${p.id}) no tiene un campo "orden" numérico y se colocará al final.`);
+            }
+        });
+        preguntas.sort((a, b) => (typeof a.orden === 'number' ? a.orden : Infinity) - (typeof b.orden === 'number' ? b.orden : Infinity));
         
         if (preguntas.length === 0) {
             console.warn("⚠️ No hay preguntas en Firestore");
@@ -364,7 +370,10 @@ function seleccionarOpcion(index) {
     
     // Actualizar puntaje
     if (opcion.correcta) {
-        puntajeTotal += opcion.puntaje;
+        if (typeof opcion.puntaje !== 'number') {
+            console.warn(`⚠️ La opción correcta de la pregunta "${pregunta.titulo}" (id: ${pregunta.id}) no tiene un campo "puntaje" numérico. Valor recibido:`, opcion.puntaje);
+        }
+        puntajeTotal += Number(opcion.puntaje) || 0;
         document.getElementById('puntaje-total').textContent = puntajeTotal;
         document.getElementById('puntaje-actual').textContent = `${puntajeTotal} pts`;
     }
@@ -374,7 +383,7 @@ function seleccionarOpcion(index) {
         preguntaId: pregunta.id,
         opcionSeleccionada: index,
         correcta: opcion.correcta,
-        puntaje: opcion.correcta ? opcion.puntaje : 0
+        puntaje: opcion.correcta ? (Number(opcion.puntaje) || 0) : 0
     });
     
     // Habilitar botón siguiente (y avisar si es la última pregunta)
@@ -416,7 +425,7 @@ function mostrarResultadosFinales() {
     mostrarResultados();
     
     const totalPosible = preguntas.length * 20;
-    const porcentaje = Math.round((puntajeTotal / totalPosible) * 100);
+    const porcentaje = totalPosible > 0 ? Math.round((puntajeTotal / totalPosible) * 100) : 0;
     
     document.getElementById('puntaje-final').textContent = `${puntajeTotal} pts`;
     
