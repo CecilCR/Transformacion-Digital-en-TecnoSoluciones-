@@ -28,14 +28,13 @@ import {
 // ============================================
 
 const firebaseConfig = {
-  apiKey: "AIzaSyATr2nmqIq6QAm0eC3aO-PbhLaaqlTaNlE",
-  authDomain: "birdmatch-lima.firebaseapp.com",
-  projectId: "birdmatch-lima",
-  storageBucket: "birdmatch-lima.firebasestorage.app",
-  messagingSenderId: "166632281489",
-  appId: "1:166632281489:web:03ec3d3c4b92413aa17630"
+  apiKey: "AIzaSyBpzZvP3jajz1IMZsteu8qO5W0vrWq673E",
+  authDomain: "transformacion-digital-cf6c0.firebaseapp.com",
+  projectId: "transformacion-digital-cf6c0",
+  storageBucket: "transformacion-digital-cf6c0.firebasestorage.app",
+  messagingSenderId: "160342297932",
+  appId: "1:160342297932:web:66421cc33bc3a42e4f13e9"
 };
-
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
