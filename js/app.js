@@ -28,12 +28,12 @@ import {
 // ============================================
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBpzZvP3jajz1IMZsteu8qO5W0vrWq673E",
-    authDomain: "birdmatch-lima.firebaseapp.com",
-    projectId: "birdmatch-lima",
-    storageBucket: "birdmatch-lima.firebasestorage.app",
-    messagingSenderId: "166632281489",
-    appId: "1:166632281489:web:03ec3d3c4b92413aa17630"
+  apiKey: "AIzaSyAlaxoaQxDgLrnRJV0L6ReiTEy1gDhziFI",
+  authDomain: "transformacion-digital-cf6c0.firebaseapp.com",
+  projectId: "transformacion-digital-cf6c0",
+  storageBucket: "transformacion-digital-cf6c0.firebasestorage.app",
+  messagingSenderId: "160342297932",
+  appId: "1:160342297932:web:66421cc33bc3a42e4f13e9"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -120,33 +120,29 @@ function limpiarMensaje(elementoId) {
 }
 
 window.mostrarLogin = function() {
-    const registro = document.getElementById('seccion-registro');
-    const login = document.getElementById('seccion-login');
-    if (registro) registro.classList.add('hidden');
-    if (login) login.classList.remove('hidden');
+    document.getElementById('seccion-registro').classList.add('hidden');
+    document.getElementById('seccion-login').classList.remove('hidden');
 };
 
 window.mostrarRegistro = function() {
-    const registro = document.getElementById('seccion-registro');
-    const login = document.getElementById('seccion-login');
-    if (registro) registro.classList.remove('hidden');
-    if (login) login.classList.add('hidden');
+    document.getElementById('seccion-registro').classList.remove('hidden');
+    document.getElementById('seccion-login').classList.add('hidden');
 };
 
 function mostrarSimulador() {
-    const authSection = document.getElementById('seccion-auth');
-    const simulador = document.getElementById('seccion-simulador');
-    const resultados = document.getElementById('seccion-resultados');
-    if (authSection) authSection.classList.add('hidden');
-    if (simulador) simulador.classList.remove('hidden');
-    if (resultados) resultados.classList.add('hidden');
+    document.getElementById('seccion-auth').classList.add('hidden');
+    document.getElementById('seccion-simulador').classList.remove('hidden');
+    document.getElementById('seccion-resultados').classList.add('hidden');
 }
 
 function mostrarResultados() {
-    const simulador = document.getElementById('seccion-simulador');
-    const resultados = document.getElementById('seccion-resultados');
-    if (simulador) simulador.classList.add('hidden');
-    if (resultados) resultados.classList.remove('hidden');
+    document.getElementById('seccion-simulador').classList.add('hidden');
+    document.getElementById('seccion-resultados').classList.remove('hidden');
+}
+
+function mostrarUsuarioAutenticado(userData) {
+    const nombreEl = document.getElementById('usuario-nombre');
+    if (nombreEl) nombreEl.textContent = userData.nombre || 'Sin nombre';
 }
 
 // ============================================
@@ -166,11 +162,9 @@ window.handleRegistro = async function() {
     limpiarMensaje('registro-mensaje');
 
     const btn = document.querySelector('#seccion-registro .btn');
-    if (btn) btn.disabled = true;
-    
+    btn.disabled = true;
     const resultado = await registrarUsuario(email, password, nombre);
-    
-    if (btn) btn.disabled = false;
+    btn.disabled = false;
 
     if (resultado.success) {
         mostrarMensaje('registro-mensaje', '✅ Cuenta creada correctamente', 'exito');
@@ -210,17 +204,12 @@ window.handleLogin = async function() {
     limpiarMensaje('login-mensaje');
 
     const btn = document.querySelector('#seccion-login .btn');
-    if (btn) btn.disabled = true;
-    
+    btn.disabled = true;
     const resultado = await iniciarSesion(email, password);
-    
-    if (btn) btn.disabled = false;
+    btn.disabled = false;
 
     if (resultado.success) {
         mostrarMensaje('login-mensaje', '✅ Inicio de sesión exitoso', 'exito');
-        setTimeout(() => {
-            cargarPreguntas();
-        }, 500);
     } else {
         let mensajeError = resultado.error;
         if (resultado.error.includes('user-not-found')) {
@@ -262,83 +251,26 @@ window.cerrarSesionYReiniciar = async function() {
 // ============================================
 
 async function cargarPreguntas() {
-    const user = auth.currentUser;
-    
-    console.log("🔍 Verificando autenticación...");
-    console.log("👤 Usuario actual:", user ? user.email : "No autenticado");
-    
-    if (!user) {
-        console.warn("⚠️ No hay usuario autenticado");
-        const titulo = document.getElementById('pregunta-titulo');
-        const contexto = document.getElementById('pregunta-contexto');
-        if (titulo) titulo.textContent = '🔒 Inicia sesión para comenzar';
-        if (contexto) contexto.textContent = 'Debes iniciar sesión para acceder al simulador de preguntas.';
-        return;
-    }
-
     try {
-        console.log("📡 Intentando cargar preguntas desde Firestore...");
-        console.log("📁 Colección: preguntas");
-        
         const q = query(collection(db, "preguntas"), orderBy("orden"));
         const snapshot = await getDocs(q);
-
-        console.log("📊 Documentos encontrados:", snapshot.size);
-
-        preguntas = snapshot.docs.map(doc => {
-            const data = doc.data();
-            // Verificar que opciones sea un array
-            if (!Array.isArray(data.opciones)) {
-                console.warn(`⚠️ Las opciones de ${doc.id} no son un array. Convirtiendo...`);
-                // Si es un objeto, convertirlo a array
-                if (typeof data.opciones === 'object' && data.opciones !== null) {
-                    data.opciones = Object.values(data.opciones);
-                } else {
-                    data.opciones = [];
-                }
-            }
-            return { id: doc.id, ...data };
-        });
-
+        
+        preguntas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
         if (preguntas.length === 0) {
             console.warn("⚠️ No hay preguntas en Firestore");
-            const titulo = document.getElementById('pregunta-titulo');
-            const contexto = document.getElementById('pregunta-contexto');
-            if (titulo) titulo.textContent = '📚 No hay preguntas disponibles';
-            if (contexto) contexto.textContent = 'Contacta a tu administrador para cargar preguntas en el sistema.';
+            document.getElementById('pregunta-titulo').textContent =
+                'Aún no hay preguntas configuradas para este simulador.';
+            document.getElementById('pregunta-contexto').textContent =
+                'Contacta a tu docente si esto no es lo esperado.';
             return;
         }
-
+        
         console.log(`✅ ${preguntas.length} preguntas cargadas desde Firestore`);
-        
-        // Ocultar auth y mostrar simulador
-        const authSection = document.getElementById('seccion-auth');
-        const simulador = document.getElementById('seccion-simulador');
-        if (authSection) authSection.classList.add('hidden');
-        if (simulador) simulador.classList.remove('hidden');
-        
         iniciarSimulador();
-        
     } catch (error) {
         console.error("❌ Error al cargar preguntas:", error);
-        console.error("🔍 Código de error:", error.code);
-        console.error("🔍 Mensaje:", error.message);
-        
-        const titulo = document.getElementById('pregunta-titulo');
-        const contexto = document.getElementById('pregunta-contexto');
-        
-        if (error.code === 'permission-denied') {
-            if (titulo) titulo.textContent = '🔒 Permiso denegado';
-            if (contexto) contexto.textContent = 
-                'No tienes permisos para leer las preguntas. Verifica las reglas de Firestore.';
-        } else if (error.code === 'unavailable') {
-            if (titulo) titulo.textContent = '⏳ Servidor no disponible';
-            if (contexto) contexto.textContent = 
-                'No se pudo conectar a Firestore. Verifica tu conexión a Internet.';
-        } else {
-            if (titulo) titulo.textContent = '❌ Error al cargar preguntas';
-            if (contexto) contexto.textContent = error.message;
-        }
+        alert("Error al cargar preguntas: " + error.message);
     }
 }
 
@@ -351,11 +283,9 @@ function iniciarSimulador() {
     puntajeTotal = 0;
     respuestasUsuario = [];
     opcionSeleccionada = null;
-
-    const puntajeTotalEl = document.getElementById('puntaje-total');
-    const puntajeActualEl = document.getElementById('puntaje-actual');
-    if (puntajeTotalEl) puntajeTotalEl.textContent = '0';
-    if (puntajeActualEl) puntajeActualEl.textContent = '0 pts';
+    
+    document.getElementById('puntaje-total').textContent = '0';
+    document.getElementById('puntaje-actual').textContent = '0 pts';
     mostrarPregunta();
 }
 
@@ -370,58 +300,38 @@ function mostrarPregunta() {
     }
 
     const pregunta = preguntas[preguntaActual];
-
+    
     // Actualizar contador
-    const contador = document.getElementById('pregunta-contador');
-    if (contador) contador.textContent = `📌 Pregunta ${preguntaActual + 1} de ${preguntas.length}`;
-
+    document.getElementById('pregunta-contador').textContent = 
+        `Pregunta ${preguntaActual + 1} de ${preguntas.length}`;
+    
     // Actualizar barra de progreso
     const progreso = ((preguntaActual) / preguntas.length) * 100;
-    const progresoFill = document.getElementById('progreso-fill');
-    if (progresoFill) progresoFill.style.width = `${progreso}%`;
-
-    // Mostrar contexto y título (soporta ambos: titulo y título)
-    const contexto = document.getElementById('pregunta-contexto');
-    const tituloEl = document.getElementById('pregunta-titulo');
-    if (contexto) contexto.textContent = pregunta.contexto || '';
+    document.getElementById('progreso-fill').style.width = `${progreso}%`;
     
-    // Soporte para campo con tilde o sin tilde
-    const tituloTexto = pregunta.título || pregunta.titulo || 'Pregunta sin título';
-    if (tituloEl) tituloEl.textContent = tituloTexto;
-
+    // Mostrar contexto y título
+    document.getElementById('pregunta-contexto').textContent = pregunta.contexto;
+    document.getElementById('pregunta-titulo').textContent = pregunta.titulo;
+    
     // Generar opciones
     const container = document.getElementById('opciones-container');
-    if (!container) return;
     container.innerHTML = '';
-
-    // Verificar que opciones sea un array
-    let opciones = pregunta.opciones;
-    if (!Array.isArray(opciones)) {
-        console.warn("⚠️ opciones no es un array, convirtiendo...");
-        if (typeof opciones === 'object' && opciones !== null) {
-            opciones = Object.values(opciones);
-        } else {
-            opciones = [];
-        }
-    }
-
-    opciones.forEach((opcion, index) => {
+    
+    pregunta.opciones.forEach((opcion, index) => {
         const btn = document.createElement('button');
         btn.className = 'opcion';
-        btn.textContent = `${String.fromCharCode(65 + index)}. ${opcion.texto || 'Opción sin texto'}`;
+        btn.textContent = `${String.fromCharCode(65 + index)}. ${opcion.texto}`;
         btn.dataset.index = index;
         btn.onclick = () => seleccionarOpcion(index);
         container.appendChild(btn);
     });
-
+    
     // Limpiar retroalimentación
-    const retroContainer = document.getElementById('retroalimentacion-container');
-    if (retroContainer) retroContainer.innerHTML = '';
-
+    document.getElementById('retroalimentacion-container').innerHTML = '';
+    
     // Deshabilitar botón siguiente
-    const btnSiguiente = document.getElementById('btn-siguiente');
-    if (btnSiguiente) btnSiguiente.disabled = true;
-
+    document.getElementById('btn-siguiente').disabled = true;
+    
     // Restablecer selección
     opcionSeleccionada = null;
 }
@@ -432,12 +342,11 @@ function mostrarPregunta() {
 
 function seleccionarOpcion(index) {
     if (opcionSeleccionada !== null) return;
-
+    
     const pregunta = preguntas[preguntaActual];
-    const opciones = Array.isArray(pregunta.opciones) ? pregunta.opciones : Object.values(pregunta.opciones || {});
-    const opcion = opciones[index];
+    const opcion = pregunta.opciones[index];
     const botones = document.querySelectorAll('.opcion');
-
+    
     opcionSeleccionada = index;
     botones.forEach((btn, i) => {
         btn.disabled = true;
@@ -445,56 +354,44 @@ function seleccionarOpcion(index) {
             btn.classList.add('seleccionada');
         }
     });
-
+    
     // Mostrar retroalimentación
     const container = document.getElementById('retroalimentacion-container');
-    if (container) {
-        const div = document.createElement('div');
-        div.className = `retroalimentacion ${opcion.correcta ? 'exito' : 'error'}`;
-        div.textContent = opcion.retroalimentación || opcion.retroalimentacion || 'Sin retroalimentación';
-        container.appendChild(div);
-    }
-
+    const div = document.createElement('div');
+    div.className = `retroalimentacion ${opcion.correcta ? 'exito' : 'error'}`;
+    div.textContent = opcion.retroalimentación;
+    container.appendChild(div);
+    
     // Actualizar puntaje
     if (opcion.correcta) {
-        puntajeTotal += opcion.puntaje || 0;
-        const puntajeTotalEl = document.getElementById('puntaje-total');
-        const puntajeActualEl = document.getElementById('puntaje-actual');
-        if (puntajeTotalEl) puntajeTotalEl.textContent = puntajeTotal;
-        if (puntajeActualEl) puntajeActualEl.textContent = `${puntajeTotal} pts`;
+        puntajeTotal += opcion.puntaje;
+        document.getElementById('puntaje-total').textContent = puntajeTotal;
+        document.getElementById('puntaje-actual').textContent = `${puntajeTotal} pts`;
     }
-
+    
     // Guardar respuesta
     respuestasUsuario.push({
         preguntaId: pregunta.id,
         opcionSeleccionada: index,
-        correcta: opcion.correcta || false,
-        puntaje: opcion.correcta ? (opcion.puntaje || 0) : 0
+        correcta: opcion.correcta,
+        puntaje: opcion.correcta ? opcion.puntaje : 0
     });
-
-    // Habilitar botón siguiente
+    
+    // Habilitar botón siguiente (y avisar si es la última pregunta)
     const btnSiguiente = document.getElementById('btn-siguiente');
-    if (btnSiguiente) {
-        btnSiguiente.disabled = false;
-        btnSiguiente.textContent = (preguntaActual === preguntas.length - 1)
-            ? '🏁 Finalizar'
-            : '➡️ Siguiente pregunta';
-    }
-
+    btnSiguiente.disabled = false;
+    btnSiguiente.textContent = (preguntaActual === preguntas.length - 1)
+        ? '🏁 Finalizar'
+        : '➡️ Siguiente';
+    
     // Marcar correcta/incorrecta visualmente
     botones.forEach((btn, i) => {
-        const opc = opciones[i];
-        if (opc && opc.correcta) {
+        if (pregunta.opciones[i].correcta) {
             btn.classList.add('correcta');
-        } else if (i === index && opc && !opc.correcta) {
+        } else if (i === index && !pregunta.opciones[i].correcta) {
             btn.classList.add('incorrecta');
         }
     });
-
-    // Scroll suave a la retroalimentación
-    setTimeout(() => {
-        if (container) container.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 200);
 }
 
 // ============================================
@@ -505,8 +402,6 @@ window.siguientePregunta = function() {
     preguntaActual++;
     if (preguntaActual < preguntas.length) {
         mostrarPregunta();
-        const contenedor = document.getElementById('contenedor-pregunta');
-        if (contenedor) contenedor.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else {
         mostrarResultadosFinales();
     }
@@ -519,45 +414,47 @@ window.siguientePregunta = function() {
 function mostrarResultadosFinales() {
     guardarRespuestas();
     mostrarResultados();
-
+    
     const totalPosible = preguntas.length * 20;
     const porcentaje = Math.round((puntajeTotal / totalPosible) * 100);
-
-    const puntajeFinal = document.getElementById('puntaje-final');
-    if (puntajeFinal) {
-        puntajeFinal.textContent = `${puntajeTotal} pts`;
-        puntajeFinal.classList.add('pulse');
-    }
-
+    
+    document.getElementById('puntaje-final').textContent = `${puntajeTotal} pts`;
+    
     let mensaje = '';
-    let emoji = '';
     if (porcentaje >= 80) {
-        emoji = '🌟';
-        mensaje = '¡Excelente! Sigue así.';
+        mensaje = '🌟 ¡Excelente! Eres un líder en gestión del cambio. Has demostrado una visión estratégica excepcional.';
     } else if (porcentaje >= 60) {
-        emoji = '👍';
-        mensaje = 'Buen trabajo, puedes mejorar.';
+        mensaje = '👍 Buen trabajo. Tienes buenas bases en gestión del cambio. Sigue profundizando en comunicación y liderazgo.';
+    } else if (porcentaje >= 40) {
+        mensaje = '📚 Necesitas reforzar tus conocimientos. Revisa los conceptos de liderazgo del cambio y comunicación efectiva.';
     } else {
-        emoji = '📚';
-        mensaje = 'Sigue practicando, lo lograrás.';
+        mensaje = '🔄 Te recomendamos revisar los fundamentos de la gestión del cambio. Cada decisión tiene un impacto crítico.';
     }
+    document.getElementById('mensaje-final').textContent = mensaje;
+    
+    const detalle = document.getElementById('detalle-resultados');
+    detalle.innerHTML = '';
+    
+    preguntas.forEach((preg, idx) => {
+        const respuesta = respuestasUsuario[idx] || { correcta: false, puntaje: 0 };
+        const div = document.createElement('div');
+        div.className = 'detalle-item';
 
-    const mensajeFinal = document.getElementById('mensaje-final');
-    if (mensajeFinal) mensajeFinal.textContent = `${emoji} ${mensaje}`;
+        const tituloTruncado = preg.titulo.length > 40
+            ? preg.titulo.substring(0, 40) + '...'
+            : preg.titulo;
 
-    // Mostrar resumen de respuestas
-    const resumenContainer = document.getElementById('resumen-respuestas');
-    if (resumenContainer) {
-        resumenContainer.innerHTML = '';
-        respuestasUsuario.forEach((resp, index) => {
-            const pregunta = preguntas[index];
-            const tituloTexto = pregunta.título || pregunta.titulo || 'Pregunta sin título';
-            const div = document.createElement('div');
-            div.className = `respuesta-resumen ${resp.correcta ? 'correcta' : 'incorrecta'}`;
-            div.textContent = `${index + 1}. ${tituloTexto} - ${resp.correcta ? '✅ Correcta' : '❌ Incorrecta'}`;
-            resumenContainer.appendChild(div);
-        });
-    }
+        const spanTitulo = document.createElement('span');
+        spanTitulo.textContent = `${idx + 1}. ${tituloTruncado}`;
+
+        const spanResultado = document.createElement('span');
+        spanResultado.style.color = respuesta.correcta ? '#2e7d32' : '#c62828';
+        spanResultado.textContent = `${respuesta.correcta ? '✅' : '❌'} ${respuesta.puntaje || 0} pts`;
+
+        div.appendChild(spanTitulo);
+        div.appendChild(spanResultado);
+        detalle.appendChild(div);
+    });
 }
 
 // ============================================
@@ -566,95 +463,71 @@ function mostrarResultadosFinales() {
 
 async function guardarRespuestas() {
     const user = auth.currentUser;
+    if (!user) return;
     
-    if (!user) {
-        console.warn("⚠️ No hay usuario autenticado. Las respuestas NO se guardaron.");
-        return;
-    }
-
-    if (!respuestasUsuario || respuestasUsuario.length === 0) {
-        console.warn("⚠️ No hay respuestas para guardar.");
-        return;
-    }
-
     try {
-        console.log(`📝 Guardando ${respuestasUsuario.length} respuestas...`);
-
-        for (const respuesta of respuestasUsuario) {
+        for (let i = 0; i < respuestasUsuario.length; i++) {
+            const resp = respuestasUsuario[i];
+            const pregunta = preguntas[i];
+            
             await addDoc(collection(db, "respuestas"), {
-                userId: user.uid,
-                userEmail: user.email,
-                preguntaId: respuesta.preguntaId,
-                opcionSeleccionada: respuesta.opcionSeleccionada,
-                correcta: respuesta.correcta,
-                puntaje: respuesta.puntaje || 0,
-                fecha: new Date().toISOString()
+                usuarioId: user.uid,
+                usuarioNombre: document.getElementById('usuario-nombre').textContent,
+                preguntaId: pregunta.id,
+                preguntaTitulo: pregunta.titulo,
+                opcionSeleccionada: resp.opcionSeleccionada,
+                correcta: resp.correcta,
+                puntaje: resp.puntaje,
+                timestamp: new Date().toISOString()
             });
         }
-
-        console.log("✅ Respuestas guardadas correctamente en Firestore");
-        
-        const mensajeFinal = document.getElementById('mensaje-final');
-        if (mensajeFinal) {
-            mensajeFinal.textContent += " 📁 Respuestas guardadas en la nube.";
-        }
-
+        console.log("✅ Respuestas guardadas en Firestore");
     } catch (error) {
         console.error("❌ Error al guardar respuestas:", error);
-        
-        const mensajeFinal = document.getElementById('mensaje-final');
-        if (mensajeFinal) {
-            mensajeFinal.textContent += " ⚠️ No se pudieron guardar las respuestas.";
-        }
     }
 }
 
 // ============================================
-// INICIALIZAR
+// REINICIAR SIMULADOR
 // ============================================
 
-document.addEventListener('DOMContentLoaded', () => {
-    console.log("🚀 Aplicación iniciada");
-    
-    // Escuchar cambios en el estado de autenticación
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            console.log("✅ Usuario autenticado:", user.email);
-            
-            // Mostrar nombre del usuario
-            const nombreEl = document.getElementById('usuario-nombre');
-            if (nombreEl) {
-                const userDoc = doc(db, "usuarios", user.uid);
-                getDoc(userDoc).then((docSnap) => {
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        nombreEl.textContent = data.nombre || user.email;
-                    } else {
-                        nombreEl.textContent = user.email;
-                    }
-                }).catch(() => {
-                    nombreEl.textContent = user.email;
-                });
+window.reiniciarSimulador = function() {
+    document.getElementById('seccion-resultados').classList.add('hidden');
+    document.getElementById('seccion-simulador').classList.remove('hidden');
+    iniciarSimulador();
+};
+
+// ============================================
+// ESCUCHAR CAMBIOS EN AUTENTICACIÓN
+// ============================================
+
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        console.log("✅ Usuario autenticado:", user.uid);
+
+        try {
+            const userDoc = await getDoc(doc(db, "usuarios", user.uid));
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                console.log("📋 Datos del usuario:", userData);
+                mostrarUsuarioAutenticado(userData);
+                mostrarSimulador();
+                await cargarPreguntas();
+            } else {
+                console.log("⚠️ El usuario no tiene datos en Firestore");
+                window.mostrarLogin();
             }
-            
-            // Cargar preguntas automáticamente
-            cargarPreguntas();
-        } else {
-            console.log("👤 Usuario no autenticado. Esperando login...");
-            const authSection = document.getElementById('seccion-auth');
-            const simulador = document.getElementById('seccion-simulador');
-            if (authSection) authSection.classList.remove('hidden');
-            if (simulador) simulador.classList.add('hidden');
+        } catch (error) {
+            console.error("❌ Error al obtener datos:", error);
+            window.mostrarLogin();
         }
-    });
+    } else {
+        console.log("🔒 Usuario no autenticado");
+        document.getElementById('seccion-auth').classList.remove('hidden');
+        document.getElementById('seccion-simulador').classList.add('hidden');
+        document.getElementById('seccion-resultados').classList.add('hidden');
+        window.mostrarRegistro();
+    }
 });
 
-// ============================================
-// EXPORTAR FUNCIONES PARA USO GLOBAL
-// ============================================
-
-window.cargarPreguntas = cargarPreguntas;
-window.iniciarSimulador = iniciarSimulador;
-window.mostrarPregunta = mostrarPregunta;
-window.seleccionarOpcion = seleccionarOpcion;
-window.mostrarResultadosFinales = mostrarResultadosFinales;
+console.log("🚀 Gestión del Cambio - Simulador listo");
